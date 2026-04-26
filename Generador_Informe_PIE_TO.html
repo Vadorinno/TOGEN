@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Generador de Informe PIE · Terapia Ocupacional</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'IBM Plex Sans',sans-serif;background:#F0F4F8;color:#1a2535;min-height:100vh}
+  :root{
+    --navy:#1F4E79;--navy-mid:#2E6FA3;--navy-light:#D6E4F0;
+    --green:#1A6B3C;--green-light:#D6EFE0;
+    --amber:#7B5800;--amber-light:#FDE9D4;
+    --red:#8B1A1A;--red-light:#FAD7D7;
+    --gray:#555;--gray-light:#EEEEEE;
+    --border:#D0D8E4;
+  }
+  .app{max-width:860px;margin:0 auto;padding:1rem}
+  .header{background:var(--navy);color:#fff;padding:1rem 1.25rem;border-radius:10px;margin-bottom:1.25rem;display:flex;align-items:center;gap:1rem}
+  .header-icon{width:40px;height:40px;background:rgba(255,255,255,.15);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+  .header-sub{font-size:11px;opacity:.65;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+  .header-title{font-size:18px;font-weight:700;line-height:1.2}
+  .header-desc{font-size:12px;opacity:.6;margin-top:2px}
+  .steps{display:flex;gap:6px;margin-bottom:1.25rem}
+  .step-pill{flex:1;text-align:center;padding:7px 4px;border-radius:6px;font-size:12px;font-weight:600}
+  .step-pill.active{background:var(--navy);color:#fff}
+  .step-pill.done{background:var(--navy-light);color:var(--navy)}
+  .step-pill.pending{background:#e8ecf1;color:#999}
+  .card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:1.25rem;margin-bottom:1rem}
+  .card-title{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:1rem}
+  .form-label{display:block;font-size:12px;font-weight:600;color:#4a5568;margin-bottom:5px;letter-spacing:.03em;text-transform:uppercase}
+  .form-input{width:100%;padding:9px 11px;border:1.5px solid var(--border);border-radius:7px;font-size:14px;font-family:'IBM Plex Sans',sans-serif;outline:none;transition:border .15s;background:#fff}
+  .form-input:focus{border-color:var(--navy)}
+  .form-group{margin-bottom:1.1rem}
+  .toggle-row{display:flex;gap:8px}
+  .toggle-btn{flex:1;padding:9px;border:2px solid var(--border);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;text-align:center;color:#333;transition:all .15s}
+  .toggle-btn.sel{border-color:var(--navy);background:var(--navy);color:#fff;font-weight:700}
+  .cycle-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .cycle-btn{padding:1rem;border:2px solid var(--border);border-radius:9px;background:#fff;cursor:pointer;text-align:left;font-family:'IBM Plex Sans',sans-serif;color:#333;width:100%;transition:all .15s}
+  .cycle-btn:hover{border-color:var(--navy-mid)}
+  .cycle-btn.sel{border-color:var(--navy);background:var(--navy);color:#fff}
+  .cycle-name{font-size:15px;font-weight:700}
+  .cycle-sub{font-size:12px;opacity:.7;margin-top:3px}
+  .btn-primary{width:100%;padding:11px;background:var(--navy);color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;margin-top:.25rem;transition:background .15s}
+  .btn-primary:hover:not(:disabled){background:var(--navy-mid)}
+  .btn-primary:disabled{background:#bbb;cursor:not-allowed}
+  .btn-hint{text-align:center;font-size:11px;color:#999;margin-top:6px}
+  .legend{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:1rem}
+  .legend-tag{font-size:11px;font-weight:700;padding:3px 8px;border-radius:4px}
+  .area-block{margin-bottom:.75rem;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+  .area-header{background:var(--navy);color:#fff;padding:8px 12px;display:flex;justify-content:space-between;align-items:center}
+  .area-header-title{font-size:13px;font-weight:700}
+  .area-progress{font-size:11px;opacity:.7;background:rgba(255,255,255,.15);padding:2px 7px;border-radius:4px;display:flex;align-items:center;gap:6px}
+  .ind-row{display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid #f2f5f8}
+  .ind-row:last-child{border-bottom:none}
+  .ind-row:nth-child(odd){background:#fafbfc}
+  .ind-text{flex:1;font-size:12.5px;color:#333;line-height:1.4}
+  .rating-btns{display:flex;gap:3px;flex-shrink:0}
+  .r-btn{width:34px;height:26px;border-radius:5px;border:1.5px solid #ddd;background:#fff;font-size:10.5px;font-weight:700;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;color:#bbb}
+  .r-btn:hover{border-color:#999;color:#666}
+  .r-L{border-color:var(--green)!important;background:var(--green-light)!important;color:var(--green)!important}
+  .r-EP{border-color:var(--amber)!important;background:var(--amber-light)!important;color:var(--amber)!important}
+  .r-NL{border-color:var(--red)!important;background:var(--red-light)!important;color:var(--red)!important}
+  .r-NO{border-color:var(--gray)!important;background:var(--gray-light)!important;color:var(--gray)!important}
+  .step2-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding:.6rem .9rem;background:#fff;border:1px solid var(--border);border-radius:8px}
+  .step2-meta{font-size:13px;font-weight:600}
+  .step2-meta span{color:#666;font-weight:400;margin-left:6px}
+  .change-btn{font-size:12px;color:var(--navy);background:none;border:none;cursor:pointer;text-decoration:underline;font-family:'IBM Plex Sans',sans-serif}
+  .info-note{background:var(--navy-light);border-left:3px solid var(--navy);padding:.6rem .9rem;border-radius:0 6px 6px 0;font-size:12px;color:var(--navy);margin-bottom:1rem;line-height:1.5}
+  .out-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:8px;flex-wrap:wrap}
+  .out-title{font-size:16px;font-weight:700}
+  .btn-row{display:flex;gap:6px}
+  .btn-sm{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;font-family:'IBM Plex Sans',sans-serif;cursor:pointer;transition:all .15s}
+  .btn-outline{border:1.5px solid var(--navy);background:#fff;color:var(--navy)}
+  .btn-outline:hover{background:var(--navy-light)}
+  .btn-fill{border:none;background:var(--navy);color:#fff}
+  .btn-fill.copied{background:var(--green)}
+  .out-area{margin-bottom:.75rem;border:1px solid var(--border);border-radius:9px;overflow:hidden}
+  .out-area-hdr{background:var(--navy);color:#fff;padding:7px 12px;display:flex;justify-content:space-between;align-items:center}
+  .out-area-title{font-size:13px;font-weight:700}
+  .copy-area-btn{padding:3px 10px;border-radius:4px;font-size:11px;font-weight:600;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;border:none;color:#fff;background:rgba(255,255,255,.2)}
+  .copy-area-btn:hover{background:rgba(255,255,255,.35)}
+  .copy-area-btn.copied{background:var(--green)}
+  .out-area-body{padding:1rem;font-size:13.5px;line-height:1.8;color:#222;background:#fff}
+  .tip{background:#f0f4f8;border:1px solid var(--border);border-radius:8px;padding:.75rem 1rem;font-size:12px;color:#555;margin-top:.5rem;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const AREAS={
+  PC:[
+    {code:"A",title:"Desempeño en actividades escolares",inds:[
+      "Sigue instrucciones orales simples del docente (1–2 pasos) sin apoyo visual",
+      "Mantiene la atención en la tarea durante al menos 10–15 minutos continuos",
+      "Copia del pizarrón o de una hoja con precisión y legibilidad suficientes",
+      "Organiza sus materiales al inicio y término de cada actividad",
+      "Solicita ayuda cuando la necesita mediante cualquier medio",
+      "Trabaja de forma autónoma en actividades cortas no dirigidas",
+      "Reconoce y respeta las normas básicas del aula",
+    ]},
+    {code:"B",title:"Prensiones y habilidades motoras finas",inds:[
+      "Utiliza prensión trípode o funcional al sostener el lápiz",
+      "Regula la presión al escribir (trazo visible, no rompe la hoja)",
+      "Realiza trazos básicos con control suficiente (líneas, curvas, formas simples)",
+      "Copia letras o palabras con legibilidad adecuada al nivel cursado",
+      "Recorta con tijera siguiendo una línea o contorno simple",
+      "Coordina ambas manos en tareas bimanuales básicas",
+      "No presenta fatiga muscular significativa en actividades de escritura",
+    ]},
+    {code:"C",title:"AVD en contexto escolar",inds:[
+      "Se alimenta de forma autónoma durante el recreo o colación",
+      "Realiza higiene de manos sin recordatorio constante",
+      "Utiliza el baño de forma autónoma (incluyendo higiene posterior)",
+      "Se viste y desviste para EF con independencia y en tiempo razonable",
+      "Cuida y reconoce sus pertenencias durante la jornada",
+      "Regula sus necesidades básicas dentro del colegio",
+    ]},
+    {code:"D",title:"Procesamiento sensorial en contexto escolar",inds:[
+      "Tolera el ruido habitual del aula y recreo sin desregulación visible",
+      "Tolera contacto físico accidental de pares y adultos",
+      "Tolera texturas de materiales de trabajo y juego",
+      "Mantiene postura funcional en la silla durante actividades dirigidas",
+      "Regula la necesidad de movimiento dentro del espacio del aula",
+      "No presenta conductas sensoriales que interrumpan su desempeño",
+    ]},
+    {code:"E",title:"Comunicación y lenguaje funcional",inds:[
+      "Comprende instrucciones simples del docente (1–2 pasos)",
+      "Se expresa verbalmente o mediante SAAC para comunicar necesidades básicas",
+      "Inicia comunicación espontánea con adultos del establecimiento",
+      "Inicia comunicación espontánea con pares",
+      "Mantiene intercambio comunicativo de al menos 2–3 turnos",
+      "Utiliza el lenguaje para resolver conflictos o expresar malestar",
+    ]},
+    {code:"F",title:"Juego y participación social",inds:[
+      "Muestra interés en la interacción con sus pares durante el recreo",
+      "Participa en juego paralelo o asociativo con otros niños/as",
+      "Participa en juego simbólico o de roles de forma espontánea o con apoyo",
+      "Respeta reglas simples de juegos grupales (turnos, espacios, resultado)",
+      "Comparte materiales o espacios sin conflicto frecuente",
+      "Tiene al menos un par de referencia o vínculo de afinidad reconocible",
+    ]},
+    {code:"G",title:"Regulación emocional y conductual",inds:[
+      "Identifica y nombra emociones básicas propias",
+      "Tolera la frustración sin descompensación conductual significativa",
+      "Acepta correcciones del adulto sin escalada conductual",
+      "Regresa a la calma en tiempo razonable tras una desregulación",
+      "Utiliza alguna estrategia de autorregulación de forma espontánea",
+      "El nivel de desregulación no impide su participación escolar sostenida",
+    ]},
+    {code:"H",title:"Participación en rutinas escolares",inds:[
+      "Anticipa la estructura de la jornada sin recordatorio constante",
+      "Utiliza apoyos visuales de rutina de forma funcional",
+      "Realiza transiciones entre actividades sin resistencia excesiva",
+      "Realiza transiciones entre espacios (sala, patio, comedor) con fluidez",
+      "Tolera actividades no preferidas dentro de la jornada",
+      "Generaliza las rutinas aprendidas a distintos adultos del colegio",
+    ]},
+    {code:"I",title:"Motricidad gruesa en contexto escolar",inds:[
+      "Se desplaza por el establecimiento con seguridad",
+      "Demuestra coordinación dinámica global adecuada para su edad",
+      "Mantiene el equilibrio en actividades motrices básicas del nivel",
+      "Adapta su nivel de actividad motora al contexto",
+      "Participa en juegos grupales que implican actividad motora",
+      "Tolera contacto físico propio del juego del patio",
+    ]},
+  ],
+  SC:[
+    {code:"A",title:"Desempeño en actividades escolares",inds:[
+      "Organiza compromisos académicos de forma autónoma (tareas, plazos, trabajos)",
+      "Gestiona materiales diferenciados por asignatura a lo largo de la jornada",
+      "Toma apuntes con legibilidad y velocidad funcionales durante la clase",
+      "Sigue instrucciones de distintos docentes sin repetición constante",
+      "Mantiene atención en bloques más extensos (45–90 minutos)",
+      "Trabaja colaborativamente con distintos compañeros/as",
+      "Organiza su tiempo frente a múltiples evaluaciones o entregas simultáneas",
+    ]},
+    {code:"B",title:"Habilidades motoras finas y escritura funcional",inds:[
+      "Mantiene escritura legible con velocidad funcional para tomar apuntes",
+      "La calidad de la escritura se sostiene a lo largo de la jornada sin deterioro",
+      "Maneja materiales específicos por asignatura (compás, transportador, regla, etc.)",
+      "Realiza trabajos prácticos con la precisión esperada para el nivel",
+      "No evita sistemáticamente las tareas escritas ni usa estrategias de escape",
+    ]},
+    {code:"C",title:"AVD en contexto escolar",inds:[
+      "Se desplaza de forma autónoma entre distintas salas y espacios del establecimiento",
+      "Maneja dinero de forma funcional en el casino o kiosco (paga, recibe vuelto)",
+      "Organiza materiales diferenciados por asignatura sin apoyo adulto constante",
+      "Gestiona su agenda o horario semanal con autonomía o apoyo mínimo",
+      "Cuida sus pertenencias durante la jornada extendida y cambios de sala",
+      "Regula necesidades básicas de forma autónoma durante toda la jornada",
+    ]},
+    {code:"D",title:"Procesamiento sensorial en contexto escolar",inds:[
+      "Tolera el cambio frecuente de ambientes (distintas salas, laboratorio, gimnasio)",
+      "Tolera el ruido y estimulación de espacios masivos (casino, recreo, actos)",
+      "Tolera contacto físico accidental en espacios de alta densidad",
+      "Regula la necesidad de movimiento en contextos de mayor exigencia académica",
+      "No presenta conductas sensoriales que generen conflicto con pares del nivel",
+    ]},
+    {code:"E",title:"Comunicación y lenguaje funcional",inds:[
+      "Comprende instrucciones complejas o abstractas de distintos docentes",
+      "Comprende lenguaje figurado, metáforas e ironías habituales del nivel",
+      "Diferencia el registro comunicativo según el contexto (formal/informal)",
+      "Participa en clases respondiendo o exponiendo ideas frente al grupo",
+      "Expresa desacuerdo o necesidades de forma apropiada ante distintos adultos",
+    ]},
+    {code:"F",title:"Habilidades sociales y participación con pares",inds:[
+      "Mantiene vínculos de amistad con al menos un par estable",
+      "Participa en dinámicas grupales sin quedar sistemáticamente excluido/a",
+      "Ocupa el tiempo libre del recreo de forma funcional y acorde al nivel etario",
+      "Reconoce y respeta las normas sociales implícitas del grupo de pares",
+      "Maneja conflictos menores sin escalar ni requerir mediación adulta constante",
+    ]},
+    {code:"G",title:"Regulación emocional y conductual",inds:[
+      "Tolera la presión académica propia del segundo ciclo",
+      "Gestiona el estrés ante períodos de alta demanda escolar",
+      "Responde proporcionalmente ante el fracaso en una tarea o evaluación",
+      "Acepta correcciones de distintos docentes sin escalada conductual",
+      "Identifica cuándo está sobrepasado/a y solicita apoyo de forma funcional",
+    ]},
+    {code:"H",title:"Organización escolar y participación en rutinas",inds:[
+      "Gestiona el cambio frecuente de docentes y asignaturas a lo largo de la jornada",
+      "Anticipa y organiza la semana escolar con sus distintas exigencias",
+      "Realiza transiciones entre salas y espacios con fluidez y sin perder tiempo de clase",
+      "Utiliza algún sistema propio para organizar sus compromisos escolares",
+      "Mantiene el funcionamiento habitual en semanas con cambios o evaluaciones acumuladas",
+    ]},
+    {code:"I",title:"Motricidad gruesa en contexto escolar",inds:[
+      "Participa en EF con coordinación y resistencia esperadas para el nivel",
+      "Se desenvuelve con seguridad en espacios compartidos con muchos pares",
+      "Adapta su nivel de actividad motora al contexto (clase vs. recreo vs. EF)",
+      "Tolera contacto físico propio de deportes y juegos grupales del nivel",
+      "No presenta hiperactividad motora en el aula que afecte su desempeño o el del grupo",
+    ]},
+  ]
+};
+
+const T={
+  A:{
+    PC:{
+      pos:(n,a)=>`${n} presenta un desempeño en actividades escolares acorde a su nivel, evidenciándose una adecuada disposición hacia las rutinas del aula y capacidad para organizar su trabajo de forma autónoma. Se observa que ${a} responde de manera funcional a las instrucciones del docente y logra mantenerse en la tarea durante el tiempo esperado para su curso, lo que constituye una fortaleza significativa dentro del contexto de integración escolar. Se considera relevante seguir potenciando estas habilidades durante el proceso de intervención, orientándolas hacia una mayor autonomía e iniciativa propia.`,
+      mix:(n,a)=>`${n} presenta un desempeño en actividades escolares que resulta funcional en algunos aspectos, sin embargo, se observan dificultades en áreas específicas que impactan en su participación plena dentro del aula. Se aprecia que ${a} logra responder a instrucciones simples y mantiene cierta organización de sus materiales, aunque su nivel de atención sostenida y autonomía en tareas no dirigidas se encuentran aún en proceso de consolidación. Por lo anterior, se considera prioritario abordar estas áreas durante el plan de intervención, con énfasis en estrategias de apoyo graduado que favorezcan una mayor independencia.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en su desempeño dentro del contexto escolar, observándose dificultades para mantenerse en la tarea, seguir instrucciones y organizar sus materiales de manera autónoma. Estas dificultades impactan directamente en su participación y rendimiento dentro del aula, por lo que se considera una de las áreas prioritarias a abordar en el plan de intervención. Se proyecta trabajar en el desarrollo de estrategias de organización y atención que faciliten una participación más activa y autónoma en las actividades académicas.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} demuestra un desempeño académico que responde de manera funcional a las exigencias del segundo ciclo, evidenciándose capacidad para organizar sus compromisos entre distintas asignaturas y mantener la atención durante bloques de clase más extensos. Se aprecia que ${a} gestiona sus materiales con autonomía y logra adaptarse a los distintos estilos pedagógicos de sus docentes, lo que constituye una fortaleza relevante para su trayectoria escolar. Se considera pertinente orientar la intervención hacia el fortalecimiento de las habilidades de planificación y gestión del tiempo ante períodos de mayor exigencia.`,
+      mix:(n,a)=>`${n} presenta un desempeño académico que resulta funcional en algunos aspectos del segundo ciclo, sin embargo, se observan dificultades en áreas que demandan mayor autonomía y organización simultánea. Se aprecia que ${a} logra seguir instrucciones de sus docentes habituales, aunque la gestión de múltiples asignaturas y la toma de apuntes en tiempo real representan un desafío que impacta en su rendimiento general. Por lo anterior, se considera prioritario abordar estrategias de organización y planificación durante el proceso de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas frente a las exigencias académicas del segundo ciclo, observándose dificultades para organizar sus compromisos entre asignaturas, gestionar sus materiales y mantener la atención durante bloques de clase más extensos. Estas dificultades impactan directamente en su desempeño escolar y en la relación con sus distintos docentes, por lo que se considera una de las áreas prioritarias del plan de intervención. Se proyecta trabajar en el desarrollo de herramientas concretas de organización y planificación que favorezcan una mayor autonomía académica.`,
+    }
+  },
+  B:{
+    PC:{
+      pos:(n,a)=>`${n} presenta habilidades de motricidad fina acordes a su etapa del desarrollo, evidenciándose un adecuado dominio en la prensión del lápiz, el control del trazo y la coordinación bimanual en tareas escolares. Se observa que ${a} logra realizar actividades de escritura y manipulación de materiales con la precisión y resistencia esperadas para su nivel, lo que favorece su participación en las actividades académicas cotidianas. Se considera relevante seguir estimulando estas habilidades durante la intervención, orientándolas hacia una mayor precisión y velocidad funcional.`,
+      mix:(n,a)=>`${n} presenta habilidades de motricidad fina que resultan funcionales en algunas áreas, sin embargo, aún se evidencian dificultades específicas que impactan en su desempeño escolar. Se observa que ${a} ha logrado desarrollar cierto control en el manejo del lápiz, aunque la regulación de la presión, la fatiga muscular o la coordinación bimanual se encuentran aún en proceso de consolidación. Por lo anterior, se considera relevante potenciar estas habilidades durante el plan de intervención, con énfasis en las acciones específicas que presentan mayor dificultad.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo en el área de motricidad fina, observándose dificultades en el control del lápiz, la precisión en el trazo y la coordinación de ambas manos en tareas escolares. Estas dificultades impactan directamente en su proceso de adquisición de la escritura y en la calidad de sus producciones gráficas dentro del aula. Se considera prioritario abordar estas habilidades durante el plan de intervención, con estrategias orientadas al desarrollo progresivo de la prensión funcional y la resistencia muscular.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} presenta habilidades de escritura funcional que responden adecuadamente a las demandas del segundo ciclo, evidenciándose capacidad para tomar apuntes con legibilidad suficiente y manejar los materiales específicos de las distintas asignaturas. Se aprecia que ${a} mantiene la calidad de su escritura a lo largo de la jornada sin deterioro significativo por fatiga, lo que favorece su participación académica. Se considera relevante orientar la intervención hacia el fortalecimiento de la velocidad y organización escrita en contextos de mayor exigencia.`,
+      mix:(n,a)=>`${n} presenta habilidades de escritura que resultan funcionales en instancias aisladas, sin embargo, se observa que la velocidad o la legibilidad se ven afectadas durante la toma de apuntes sostenida en clases. Se aprecia que ${a} logra realizar producciones escritas breves con adecuada calidad, aunque la demanda continua del segundo ciclo evidencia una disminución del rendimiento a medida que avanza la jornada. Por lo anterior, se considera prioritario abordar la resistencia y velocidad de escritura durante el proceso de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo en el área de escritura funcional, observándose dificultades en la velocidad, legibilidad y resistencia durante las actividades de registro escrito propias del segundo ciclo. Estas dificultades impactan en su capacidad para tomar apuntes durante las clases y completar trabajos escritos dentro del tiempo esperado. Se considera prioritario abordar estas habilidades en el plan de intervención, evaluando además el uso de herramientas alternativas que faciliten el acceso al currículo.`,
+    }
+  },
+  C:{
+    PC:{
+      pos:(n,a)=>`${n} se desenvuelve con autonomía en las actividades de la vida diaria propias del contexto escolar, logrando alimentarse, realizar su higiene y cuidar sus pertenencias sin necesidad de apoyo adulto constante. Se observa que ${a} ha consolidado las rutinas de autocuidado esperadas para su nivel, lo que favorece su participación en la jornada escolar de manera independiente. Se considera relevante mantener y seguir generalizando estas habilidades a nuevos contextos durante el proceso de intervención.`,
+      mix:(n,a)=>`${n} presenta un desempeño autónomo en algunas actividades de la vida diaria dentro del colegio, sin embargo, aún requiere apoyo puntual en ciertas tareas que impactan en su participación plena durante la jornada. Se aprecia que ${a} ha logrado consolidar algunas rutinas de autocuidado, aunque aspectos como el manejo de sus pertenencias o la higiene post-alimentación aún se encuentran en proceso. Por lo anterior, se considera pertinente abordar estas áreas durante la intervención, con énfasis en el apoyo graduado y la generalización de habilidades.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en las actividades de la vida diaria dentro del contexto escolar, requiriendo asistencia del adulto en tareas como la alimentación, la higiene o el manejo de sus pertenencias. Estas dificultades impactan en su nivel de autonomía e independencia durante la jornada escolar, por lo que se considera una de las áreas prioritarias del plan de intervención. Se proyecta trabajar en el desarrollo progresivo de habilidades de autocuidado con apoyo graduado y estrategias de generalización al contexto escolar y familiar.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} se desenvuelve con autonomía en las actividades de la vida diaria propias del segundo ciclo, evidenciándose capacidad para desplazarse entre distintos espacios del establecimiento, gestionar sus materiales por asignatura y manejar dinero de forma funcional en el casino. Se aprecia que ${a} ha consolidado las habilidades de independencia esperadas para su nivel, lo que favorece su participación autónoma en la jornada escolar. Se considera relevante orientar la intervención hacia el fortalecimiento de habilidades más complejas vinculadas a la organización y la proyección futura.`,
+      mix:(n,a)=>`${n} presenta un desempeño autónomo en algunas AVD del segundo ciclo, sin embargo, se observan dificultades en aspectos que demandan mayor organización y autonomía, como la gestión de materiales por asignatura o el manejo de dinero en el casino. Se aprecia que ${a} logra desplazarse de forma independiente por el establecimiento, aunque la administración de sus pertenencias y compromisos a lo largo de la jornada aún requiere apoyo puntual. Por lo anterior, se considera prioritario abordar estas áreas durante el proceso de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo en las AVD propias del segundo ciclo, observándose dificultades para gestionar sus materiales entre asignaturas, manejar dinero de forma funcional y organizar su jornada de manera autónoma. Estas dificultades impactan en su independencia dentro del establecimiento y en la relación con sus pares y docentes, por lo que se considera una de las áreas prioritarias del plan de intervención. Se proyecta trabajar en el desarrollo de habilidades funcionales de organización y autonomía con estrategias concretas y graduadas.`,
+    }
+  },
+  D:{
+    PC:{
+      pos:(n,a)=>`${n} presenta un procesamiento sensorial que le permite participar de forma funcional en los distintos contextos del colegio, tolerando el nivel de ruido, el contacto físico accidental y las texturas de los materiales de trabajo sin desregulación visible. Se observa que ${a} logra mantener una postura adecuada y regular su necesidad de movimiento dentro del aula, lo que favorece su permanencia en la tarea. Se considera relevante continuar monitoreando el perfil sensorial durante la intervención para anticipar posibles dificultades ante cambios de contexto.`,
+      mix:(n,a)=>`${n} presenta un perfil sensorial con algunas áreas de sensibilidad que, en determinados contextos escolares, generan dificultades para la regulación y la permanencia en la tarea. Se aprecia que ${a} logra tolerar algunos estímulos del entorno escolar, sin embargo, ante situaciones de mayor intensidad sensorial se observan respuestas que impactan en su desempeño. Por lo anterior, se considera relevante abordar estrategias de regulación sensorial durante el plan de intervención, e incorporar adaptaciones ambientales que favorezcan su participación.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área del procesamiento sensorial, observándose respuestas de hipersensibilidad o búsqueda que impactan en su permanencia en la tarea y en su participación en los distintos contextos del colegio. Estas características sensoriales generan dificultades para tolerar el ruido, el contacto físico o las texturas propias del entorno escolar, lo que afecta tanto su desempeño académico como su participación social. Se considera prioritario incorporar estrategias de regulación sensorial y adaptaciones ambientales como parte central del plan de intervención.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} presenta un procesamiento sensorial que le permite adaptarse de manera funcional a los distintos contextos y ambientes del segundo ciclo, tolerando los cambios frecuentes de sala, el ruido de los espacios masivos y el contacto físico propio de los pasillos entre clases. Se aprecia que ${a} regula de forma adecuada su necesidad de movimiento en contextos de mayor exigencia académica, lo que favorece su desempeño. Se considera relevante continuar monitoreando el perfil sensorial durante la intervención ante el aumento de las exigencias del nivel.`,
+      mix:(n,a)=>`${n} presenta un perfil sensorial que, ante las mayores exigencias del segundo ciclo, genera algunas dificultades para adaptarse a los cambios frecuentes de ambiente y a la estimulación propia de los espacios masivos. Se aprecia que ${a} logra regularse en contextos más estructurados, sin embargo, situaciones como el casino, los recreos numerosos o los cambios de sala no anticipados pueden generar desregulación que impacta en su disposición académica. Por lo anterior, se considera relevante incorporar estrategias de regulación sensorial y anticipación ambiental en el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área del procesamiento sensorial en el contexto del segundo ciclo, observándose dificultades para tolerar los cambios frecuentes de ambiente y el nivel de estimulación de los espacios masivos. Estas características impactan en su disposición académica y en las relaciones con sus pares, por lo que se considera una de las áreas prioritarias del plan de intervención. Se proyecta incorporar adaptaciones ambientales y estrategias de anticipación que favorezcan la regulación y participación de ${n}.`,
+    }
+  },
+  E:{
+    PC:{
+      pos:(n,a)=>`${n} presenta habilidades comunicativas funcionales para su nivel, evidenciándose capacidad para comprender instrucciones del docente, expresar sus necesidades y mantener intercambios comunicativos con adultos y pares dentro del establecimiento. Se observa que ${a} inicia comunicación de forma espontánea y utiliza el lenguaje como herramienta para resolver situaciones cotidianas, lo que constituye una fortaleza relevante en su proceso de integración escolar. Se considera pertinente continuar potenciando estas habilidades durante la intervención, orientándolas hacia contextos comunicativos más complejos.`,
+      mix:(n,a)=>`${n} presenta habilidades comunicativas que resultan funcionales en algunos contextos, sin embargo, se observan dificultades en aspectos que impactan en su participación plena dentro del aula. Se aprecia que ${a} logra comprender instrucciones simples y expresar necesidades básicas, aunque el inicio espontáneo de la comunicación con pares y el mantenimiento de intercambios de varios turnos aún se encuentran en proceso de consolidación. Por lo anterior, se considera prioritario abordar el desarrollo comunicativo durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área de comunicación y lenguaje funcional, observándose dificultades para comprender instrucciones del docente, expresar sus necesidades y mantener intercambios comunicativos con pares y adultos. Estas dificultades impactan en su participación académica y social dentro del establecimiento, por lo que se considera una de las áreas prioritarias del plan de intervención. Se proyecta trabajar en el desarrollo de habilidades comunicativas funcionales, evaluando la pertinencia de incorporar o fortalecer sistemas aumentativos o alternativos de comunicación.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} presenta habilidades comunicativas que responden de manera funcional a las exigencias del segundo ciclo, evidenciándose capacidad para comprender instrucciones complejas de distintos docentes, diferenciar el registro comunicativo según el contexto y participar en instancias de exposición frente al grupo. Se aprecia que ${a} utiliza el lenguaje de manera apropiada para expresar desacuerdos o necesidades ante distintos adultos, lo que favorece sus relaciones dentro del establecimiento. Se considera pertinente orientar la intervención hacia el fortalecimiento de habilidades comunicativas en situaciones de mayor presión o exigencia social.`,
+      mix:(n,a)=>`${n} presenta habilidades comunicativas que resultan funcionales en algunos contextos del segundo ciclo, sin embargo, se observan dificultades en situaciones que demandan mayor complejidad o formalidad comunicativa. Se aprecia que ${a} logra comunicarse con sus docentes habituales, aunque la comprensión del lenguaje figurado, la diferenciación de registros o la participación espontánea frente al grupo representan un desafío. Por lo anterior, se considera pertinente abordar estas habilidades durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo en el área de comunicación funcional en el contexto del segundo ciclo, observándose dificultades para comprender instrucciones abstractas, diferenciar registros comunicativos y participar de forma espontánea frente al grupo. Estas dificultades impactan en su desempeño académico y en sus relaciones con los distintos docentes y pares, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    }
+  },
+  F:{
+    PC:{
+      pos:(n,a)=>`${n} muestra interés genuino en la interacción con sus pares y participa de forma activa en instancias de juego y actividades compartidas durante el recreo. Se observa que ${a} cuenta con al menos un par de referencia estable y logra respetar las reglas básicas de los juegos grupales, lo que facilita su integración social dentro del curso. Se considera relevante seguir potenciando estas habilidades durante la intervención, orientándolas hacia contextos de juego más complejos y la resolución autónoma de conflictos menores.`,
+      mix:(n,a)=>`${n} presenta interés en la interacción con sus pares, sin embargo, la participación en juegos grupales y el establecimiento de vínculos estables aún se encuentran en proceso de consolidación. Se aprecia que ${a} logra participar en juego paralelo o asociativo con apoyo, aunque el inicio espontáneo de la interacción y el respeto de las reglas en situaciones más complejas representan un desafío. Por lo anterior, se considera prioritario abordar el desarrollo de habilidades sociales y de juego durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área de juego y participación social, observándose dificultades para iniciar y mantener interacciones con sus pares, respetar reglas de juego y establecer vínculos de afinidad reconocibles. Estas dificultades impactan en su integración dentro del grupo curso y en la calidad de sus experiencias durante el recreo, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} presenta habilidades sociales que le permiten integrarse de manera funcional en el contexto del segundo ciclo, evidenciándose vínculos de afinidad estables con al menos un par y capacidad para participar en las dinámicas grupales del curso sin quedar excluido/a. Se aprecia que ${a} reconoce las normas sociales implícitas del grupo y maneja los conflictos menores con relativa autonomía, lo que favorece su bienestar dentro del establecimiento.`,
+      mix:(n,a)=>`${n} presenta habilidades sociales que resultan funcionales en algunos contextos, sin embargo, se observan dificultades para leer las normas sociales implícitas del grupo de pares y participar de manera fluida en las dinámicas del segundo ciclo. Se aprecia que ${a} cuenta con algún vínculo de referencia, aunque su participación en el grupo curso puede ser selectiva o verse afectada por dificultades en el manejo de conflictos. Por lo anterior, se considera prioritario abordar el desarrollo de habilidades sociales durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área de habilidades sociales, observándose dificultades para establecer vínculos estables, participar en las dinámicas grupales del curso y manejar conflictos con pares sin escalada. Estas dificultades impactan en su bienestar emocional y en su integración dentro del grupo, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    }
+  },
+  G:{
+    PC:{
+      pos:(n,a)=>`${n} presenta una regulación emocional funcional para su nivel de desarrollo, evidenciándose capacidad para identificar sus emociones básicas, tolerar la frustración y retornar a la calma en tiempo razonable tras una situación de desregulación. Se observa que ${a} ha comenzado a incorporar estrategias de autorregulación de forma espontánea, lo que constituye una fortaleza relevante para su participación sostenida en el contexto escolar. Se considera pertinente continuar fortaleciendo estas habilidades durante la intervención, orientándolas hacia situaciones de mayor exigencia emocional.`,
+      mix:(n,a)=>`${n} presenta habilidades de regulación emocional que resultan funcionales en algunos contextos, sin embargo, ante situaciones de frustración, cambio de rutina o corrección del adulto, se observan respuestas que aún requieren apoyo para resolverse de manera adaptativa. Se aprecia que ${a} identifica algunas emociones básicas con apoyo, aunque el uso espontáneo de estrategias de autorregulación y el retorno autónomo a la calma se encuentran en proceso de consolidación. Por lo anterior, se considera prioritario abordar la regulación emocional como eje central del plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área de regulación emocional y conductual, observándose dificultades para tolerar la frustración, aceptar correcciones del adulto y retornar a la calma de forma autónoma tras una desregulación. Estas dificultades impactan en su participación sostenida dentro del aula y en el clima del grupo curso, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} presenta una regulación emocional que le permite desenvolverse de manera funcional frente a las exigencias del segundo ciclo, evidenciándose capacidad para gestionar el estrés ante períodos de alta demanda académica y responder de forma proporcionada ante el fracaso o las correcciones de distintos docentes. Se aprecia que ${a} identifica cuando se siente sobrepasado/a y solicita apoyo de forma funcional, lo que constituye una fortaleza relevante.`,
+      mix:(n,a)=>`${n} presenta habilidades de regulación emocional que resultan funcionales en períodos de menor exigencia, sin embargo, ante la presión académica propia del segundo ciclo se observan respuestas que aún requieren apoyo para resolverse adaptativamente. Se aprecia que ${a} ha desarrollado cierta conciencia de sus estados emocionales, aunque la gestión autónoma del estrés y la respuesta proporcional ante el fracaso se encuentran en proceso. Por lo anterior, se considera prioritario abordar la regulación emocional en el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en el área de regulación emocional, observándose dificultades para tolerar la presión académica del segundo ciclo, gestionar el estrés ante evaluaciones acumuladas y responder de manera proporcional ante correcciones o fracasos. Estas dificultades impactan en su bienestar dentro del establecimiento y en su desempeño académico, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    }
+  },
+  H:{
+    PC:{
+      pos:(n,a)=>`${n} participa de manera funcional en las rutinas escolares, evidenciándose capacidad para anticipar la estructura de la jornada, realizar las transiciones entre actividades y espacios con fluidez y generalizar las rutinas aprendidas a distintos adultos del establecimiento. Se observa que ${a} utiliza los apoyos visuales disponibles de forma autónoma, lo que favorece su organización y participación durante la jornada. Se considera pertinente continuar potenciando la autonomía en las rutinas durante la intervención, avanzando hacia situaciones menos predecibles.`,
+      mix:(n,a)=>`${n} participa en las rutinas escolares con apoyo, sin embargo, se observan dificultades en algunos momentos de la jornada que impactan en su organización y disposición hacia las actividades. Se aprecia que ${a} logra seguir la rutina habitual con apoyo visual o verbal del adulto, aunque las transiciones entre actividades no anticipadas y la tolerancia a actividades no preferidas aún representan un desafío. Por lo anterior, se considera prioritario abordar la participación en rutinas y el desarrollo de la flexibilidad durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en la participación en rutinas escolares, observándose dificultades para anticipar la jornada, realizar transiciones sin resistencia y tolerar cambios en la estructura habitual. Estas dificultades impactan en su organización diaria y en la dinámica del aula, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} gestiona de manera funcional la complejidad organizativa del segundo ciclo, evidenciándose capacidad para anticipar la semana escolar, realizar transiciones entre salas con fluidez y utilizar algún sistema propio para organizar sus compromisos. Se aprecia que ${a} mantiene su funcionamiento habitual incluso en semanas con cambios de horario o evaluaciones acumuladas, lo que constituye una fortaleza relevante para su desempeño en el nivel.`,
+      mix:(n,a)=>`${n} presenta habilidades de organización que resultan funcionales en períodos de menor exigencia, sin embargo, ante semanas con múltiples evaluaciones o cambios de horario, se observan dificultades para anticipar y gestionar sus compromisos de manera autónoma. Se aprecia que ${a} logra seguir la rutina habitual, aunque las transiciones no anticipadas entre docentes o salas pueden generar desorganización que impacta en su llegada a clases. Por lo anterior, se considera prioritario abordar las habilidades de organización y anticipación durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo significativas en la organización escolar y la participación en rutinas del segundo ciclo, observándose dificultades para gestionar el cambio frecuente de docentes, anticipar la semana escolar y llegar a clases con los materiales necesarios de forma consistente. Estas dificultades impactan en su desempeño académico y en la relación con sus distintos docentes, por lo que se considera una de las áreas prioritarias del plan de intervención.`,
+    }
+  },
+  I:{
+    PC:{
+      pos:(n,a)=>`${n} presenta características motrices gruesas acordes a su etapa del desarrollo, evidenciándose un buen dominio en el desplazamiento, la coordinación dinámica global y la participación en juegos grupales que implican actividad física. Se observa que ${a} adapta su nivel de actividad motora al contexto de manera funcional, manteniéndose activo/a durante el recreo y más quieto/a dentro del aula, lo que favorece su desempeño general. Se considera relevante continuar estimulando estas habilidades durante la intervención, potenciando aspectos específicos del nivel.`,
+      mix:(n,a)=>`${n} presenta características motrices gruesas que resultan funcionales en algunos contextos, sin embargo, aún se evidencian dificultades específicas que impactan en su participación o en la dinámica dentro del aula. Se aprecia que ${a} logra desplazarse con seguridad por el establecimiento, aunque la regulación del nivel de actividad motora en contextos más estructurados o el desempeño en actividades de mayor coordinación representan un desafío. Por lo anterior, se considera relevante potenciar estas habilidades durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo en el área de motricidad gruesa, observándose dificultades en la coordinación dinámica, el equilibrio o la regulación del nivel de actividad motora en el contexto escolar. Estas dificultades impactan en su participación en educación física y en el patio, así como en la dinámica dentro del aula cuando la actividad motora se torna difícil de regular. Se considera prioritario abordar estas habilidades durante el plan de intervención.`,
+    },
+    SC:{
+      pos:(n,a)=>`${n} presenta un desempeño en motricidad gruesa funcional para las demandas del segundo ciclo, evidenciándose capacidad para participar en educación física con la coordinación y resistencia esperadas para el nivel y adaptarse a los distintos contextos motrices del establecimiento. Se aprecia que ${a} tolera el contacto físico propio de los deportes y juegos grupales sin respuestas desproporcionadas, lo que favorece su integración en actividades colectivas.`,
+      mix:(n,a)=>`${n} presenta un desempeño en motricidad gruesa que resulta funcional en algunos contextos, sin embargo, se observan dificultades específicas que impactan en su participación en educación física o en la regulación motora dentro del aula. Se aprecia que ${a} logra desplazarse con seguridad por el establecimiento, aunque la coordinación en deportes de equipo o la adaptación del nivel de actividad al contexto de clases representan un desafío. Por lo anterior, se considera pertinente abordar estas habilidades durante el plan de intervención.`,
+      neg:(n,a)=>`${n} presenta necesidades de apoyo en el área de motricidad gruesa en el contexto del segundo ciclo, observándose dificultades en la coordinación para deportes grupales, la regulación del nivel de actividad motora dentro del aula o el manejo del contacto físico propio del nivel. Estas dificultades pueden generar situaciones de exclusión en instancias deportivas e impactar en la dinámica del aula, por lo que se considera relevante abordarlas durante el plan de intervención.`,
+    }
+  }
+};
+
+const S={step:1,ciclo:null,nombre:"",genero:"F",ratings:{},output:{},copied:{}};
+
+function areas(){ return S.ciclo?AREAS[S.ciclo]:[]; }
+function getRating(c,i){ return S.ratings[`${c}-${i}`]||null; }
+function filledCount(a){ return a.inds.filter((_,i)=>getRating(a.code,i)).length; }
+function areasWithData(){ return areas().filter(a=>a.inds.some((_,i)=>getRating(a.code,i))); }
+function canGenerate(){ return areasWithData().length>=3; }
+function esc(s){ return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+function artP(){ return S.genero==="M"?"el estudiante":"la estudiante"; }
+
+function pattern(area){
+  const rated=area.inds.map((_,i)=>getRating(area.code,i)).filter(Boolean);
+  if(!rated.length) return null;
+  const L=rated.filter(r=>r==="L").length;
+  const NL=rated.filter(r=>r==="NL").length;
+  const total=rated.length;
+  if(L/total>=0.6) return "pos";
+  if(NL/total>=0.5) return "neg";
+  return "mix";
+}
+
+function generateAll(){
+  const out={};
+  const nombre=S.nombre||artP();
+  areasWithData().forEach(area=>{
+    const p=pattern(area);
+    if(!p) return;
+    if(T[area.code]&&T[area.code][S.ciclo]&&T[area.code][S.ciclo][p]){
+      out[area.code]=T[area.code][S.ciclo][p](nombre, artP());
+    }
+  });
+  return out;
+}
+
+function render(){
+  const inp=document.getElementById("inp-nombre");
+  const focused=inp&&document.activeElement===inp;
+  const cur=focused?inp.selectionStart:0;
+  if(inp) S.nombre=inp.value;
+  document.getElementById("root").innerHTML=buildHTML();
+  bind();
+  if(focused){
+    const ni=document.getElementById("inp-nombre");
+    if(ni){ni.focus();try{ni.setSelectionRange(cur,cur);}catch(e){}}
+  }
+}
+
+function buildHTML(){
+  const steps=["Configuración","Evaluación","Resultados"];
+  return `<div class="app">
+    <div class="header">
+      <div class="header-icon">📋</div>
+      <div>
+        <div class="header-sub">PIE · Terapia Ocupacional · CEA</div>
+        <div class="header-title">Generador de Informe de Evaluación</div>
+        <div class="header-desc">Marca los indicadores → genera la redacción automáticamente</div>
+      </div>
+    </div>
+    <div class="steps">${steps.map((n,i)=>{
+      const cl=S.step===i+1?"active":S.step>i+1?"done":"pending";
+      return `<div class="step-pill ${cl}">${i+1}. ${n}</div>`;
+    }).join("")}</div>
+    ${S.step===1?s1():""}
+    ${S.step===2?s2():""}
+    ${S.step===3?s3():""}
+  </div>`;
+}
+
+function s1(){
+  const ok=S.ciclo&&S.nombre.trim();
+  return `
+  <div class="card">
+    <div class="card-title">👤 Datos del/la estudiante</div>
+    <div class="form-group">
+      <label class="form-label">Nombre completo del/la estudiante</label>
+      <input class="form-input" id="inp-nombre" value="${esc(S.nombre)}" placeholder="Ej: Anaís González" autocomplete="off"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Género para la redacción del informe</label>
+      <div class="toggle-row">
+        <button class="toggle-btn${S.genero==="M"?" sel":""}" id="btn-gM">Masculino — él / el estudiante</button>
+        <button class="toggle-btn${S.genero==="F"?" sel":""}" id="btn-gF">Femenino — ella / la estudiante</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">🎓 Ciclo educativo</div>
+    <div class="cycle-grid">
+      <button class="cycle-btn${S.ciclo==="PC"?" sel":""}" id="btn-cPC">
+        <div class="cycle-name">Primer Ciclo</div><div class="cycle-sub">1° a 4° Básico</div>
+      </button>
+      <button class="cycle-btn${S.ciclo==="SC"?" sel":""}" id="btn-cSC">
+        <div class="cycle-name">Segundo Ciclo</div><div class="cycle-sub">5° a 8° Básico</div>
+      </button>
+    </div>
+  </div>
+  <button class="btn-primary" id="btn-next1"${ok?"":" disabled"}>Continuar con la evaluación →</button>
+  ${!ok?`<div class="btn-hint">Completa el nombre y selecciona el ciclo para continuar</div>`:""}`;
+}
+
+function s2(){
+  const aw=areasWithData().length;
+  return `
+  <div class="step2-bar">
+    <div class="step2-meta">${esc(S.nombre)}<span>${S.ciclo==="PC"?"Primer Ciclo (1°–4°)":"Segundo Ciclo (5°–8°)"}</span></div>
+    <button class="change-btn" id="btn-back1">← Cambiar datos</button>
+  </div>
+  <div class="legend">
+    <div class="legend-tag" style="background:#D6EFE0;color:#1A6B3C">L — Logrado</div>
+    <div class="legend-tag" style="background:#FDE9D4;color:#7B5800">EP — En proceso</div>
+    <div class="legend-tag" style="background:#FAD7D7;color:#8B1A1A">NL — No logrado</div>
+    <div class="legend-tag" style="background:#EEEEEE;color:#555">NO — No observado</div>
+  </div>
+  <div class="info-note">Marca L, EP, NL o NO para cada indicador. Haz clic nuevamente para deseleccionar. El badge en cada área (▲ Logrado / ◆ Mixto / ▼ Con apoyo) indica qué tipo de texto se generará. Necesitas al menos 3 áreas evaluadas.</div>
+  ${areas().map(area=>{
+    const fc=filledCount(area);
+    const p=pattern(area);
+    const badge=p?`<span style="font-size:10px;padding:2px 7px;border-radius:3px;background:${p==="pos"?"#D6EFE0":p==="neg"?"#FAD7D7":"#FDE9D4"};color:${p==="pos"?"#1A6B3C":p==="neg"?"#8B1A1A":"#7B5800"};font-weight:700">${p==="pos"?"▲ Logrado":p==="neg"?"▼ Con apoyo":"◆ Mixto"}</span>`:"";
+    return `<div class="area-block">
+      <div class="area-header">
+        <span class="area-header-title">${area.code}. ${area.title}</span>
+        <span class="area-progress">${badge}<span>${fc}/${area.inds.length}</span></span>
+      </div>
+      ${area.inds.map((ind,i)=>{
+        const cur=getRating(area.code,i);
+        return `<div class="ind-row">
+          <div class="ind-text">${ind}</div>
+          <div class="rating-btns">
+            ${["L","EP","NL","NO"].map(rv=>`<button class="r-btn${cur===rv?" r-"+rv:""}" data-a="${area.code}" data-i="${i}" data-v="${rv}">${rv}</button>`).join("")}
+          </div>
+        </div>`;
+      }).join("")}
+    </div>`;
+  }).join("")}
+  <button class="btn-primary" id="btn-gen"${!canGenerate()?" disabled":""}>
+    ${canGenerate()?`Generar informe (${aw} área${aw!==1?"s":""} evaluada${aw!==1?"s":""}) →`:"Generar informe →"}
+  </button>
+  ${!canGenerate()?`<div class="btn-hint">Evalúa al menos 3 áreas para generar el informe</div>`:""}`;
+}
+
+function s3(){
+  const out=areas().filter(a=>S.output[a.code]);
+  return `
+  <div class="out-header">
+    <div>
+      <div class="out-title">${esc(S.nombre)}</div>
+      <div style="font-size:12px;color:#666">${S.ciclo==="PC"?"Primer Ciclo":"Segundo Ciclo"} · Informe generado</div>
+    </div>
+    <div class="btn-row">
+      <button class="btn-sm btn-outline" id="btn-back2">← Volver</button>
+      <button class="btn-sm btn-fill${S.copied.__ALL?" copied":""}" id="btn-copy-all">${S.copied.__ALL?"✓ Copiado todo":"Copiar todo"}</button>
+    </div>
+  </div>
+  ${out.map(area=>`
+    <div class="out-area">
+      <div class="out-area-hdr">
+        <span class="out-area-title">${area.code}. ${area.title}</span>
+        <button class="copy-area-btn${S.copied[area.code]?" copied":""}" data-copy="${area.code}">${S.copied[area.code]?"✓ Copiado":"Copiar"}</button>
+      </div>
+      <div class="out-area-body">${esc(S.output[area.code])}</div>
+    </div>
+  `).join("")}
+  <div class="tip">💡 Este texto es un punto de partida. Complementa con los datos cualitativos específicos de cada estudiante antes de pegarlo en el informe final.</div>`;
+}
+
+function bind(){
+  const inp=document.getElementById("inp-nombre");
+  if(inp) inp.addEventListener("input",e=>{
+    S.nombre=e.target.value;
+    const btn=document.getElementById("btn-next1");
+    if(btn) btn.disabled=!(S.ciclo&&S.nombre.trim());
+  });
+  q("btn-gM",  ()=>{ S.genero="M"; render(); });
+  q("btn-gF",  ()=>{ S.genero="F"; render(); });
+  q("btn-cPC", ()=>{ S.ciclo="PC"; S.ratings={}; S.output={}; render(); });
+  q("btn-cSC", ()=>{ S.ciclo="SC"; S.ratings={}; S.output={}; render(); });
+  q("btn-next1",()=>{ S.step=2; render(); });
+  q("btn-back1",()=>{ S.step=1; render(); });
+  q("btn-back2",()=>{ S.step=2; render(); });
+  q("btn-gen",()=>{ S.output=generateAll(); S.step=3; render(); });
+  q("btn-copy-all",()=>{
+    const txt=areas().filter(a=>S.output[a.code])
+      .map(a=>`${a.code}. ${a.title.toUpperCase()}\n\n${S.output[a.code]}`)
+      .join("\n\n─────────────────────\n\n");
+    doCopy("__ALL",txt);
+  });
+  document.querySelectorAll(".r-btn").forEach(btn=>{
+    btn.addEventListener("click",()=>{
+      const key=`${btn.dataset.a}-${btn.dataset.i}`;
+      S.ratings[key]=S.ratings[key]===btn.dataset.v?null:btn.dataset.v;
+      render();
+    });
+  });
+  document.querySelectorAll("[data-copy]").forEach(btn=>{
+    btn.addEventListener("click",()=>doCopy(btn.dataset.copy,S.output[btn.dataset.copy]));
+  });
+}
+
+function q(id,fn){ const el=document.getElementById(id); if(el) el.addEventListener("click",fn); }
+
+function doCopy(key,text){
+  if(!text) return;
+  navigator.clipboard.writeText(text).catch(()=>{});
+  S.copied[key]=true; render();
+  setTimeout(()=>{ S.copied[key]=false; render(); },2000);
+}
+
+document.getElementById("root").innerHTML=buildHTML();
+bind();
+</script>
+</body>
+</html>
